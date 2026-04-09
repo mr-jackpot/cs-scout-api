@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.1.0...cs-scout-api-v1.2.0) (2026-04-09)
+
+
+### Features
+
+* added node-cache and fix for 429 ([f24bc92](https://github.com/mr-jackpot/cs-scout-api/commit/f24bc9272b27cf6c829b31affe5681183c9798f2))
+* added node-cache and fix for 429 ([f24bc92](https://github.com/mr-jackpot/cs-scout-api/commit/f24bc9272b27cf6c829b31affe5681183c9798f2))
+
 ## [1.1.0](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.0.0...cs-scout-api-v1.1.0) (2026-04-09)
 
 
