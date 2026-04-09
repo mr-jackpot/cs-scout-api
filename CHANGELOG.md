@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.2.0...cs-scout-api-v1.2.1) (2026-04-09)
+
+
+### Bug Fixes
+
+* wrap vi.useFakeTimers/useRealTimers in block bodies to satisfy tsc ([eff96b8](https://github.com/mr-jackpot/cs-scout-api/commit/eff96b84f8cf161db592c1963c376a44f794cd8a))
+
 ## [1.2.0](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.1.0...cs-scout-api-v1.2.0) (2026-04-09)
 
 
