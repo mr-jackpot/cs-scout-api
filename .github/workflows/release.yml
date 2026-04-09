@@ -4,13 +4,12 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
     steps:
@@ -25,19 +24,24 @@ jobs:
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
       - uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - uses: google-github-actions/setup-gcloud@v2
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy cs-scout-api \
+            --project "${{ secrets.GCP_PROJECT_ID }}" \
             --source . \
             --region europe-west2 \
             --allow-unauthenticated \
-            --set-env-vars "FACEIT_API_KEY=${{ secrets.FACEIT_API_KEY }},NODE_ENV=production,API_KEY=${{ secrets.API_KEY }}"
+            --set-env-vars "NODE_ENV=production" \
+            --set-secrets "FACEIT_API_KEY=FACEIT_API_KEY:latest,API_KEY=API_KEY:latest"
