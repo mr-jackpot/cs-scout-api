@@ -304,8 +304,8 @@ describe("getPlayerStatsForCompetition", () => {
 });
 
 describe("faceitFetch retry on 429", () => {
-  beforeEach(() => vi.useFakeTimers());
-  afterEach(() => vi.useRealTimers());
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); });
 
   it("should retry on 429 and succeed on second attempt", async () => {
     mockFetch
