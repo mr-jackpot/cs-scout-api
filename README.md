@@ -159,6 +159,10 @@ npm run lint     # Run ESLint
 - **Docs**: Swagger UI / OpenAPI 3.0
 - **Data Source**: [FACEIT Data API](https://docs.faceit.com/docs/data-api/)
 
+## AI Agent Instructions
+
+Copilot CLI and other AI agents: see [`.github/copilot-instructions.md`](.github/copilot-instructions.md) for project conventions and patterns.
+
 ## License
 
 MIT
