@@ -7,6 +7,41 @@ export const ORGANIZERS = {
   ESEA: "08b06cfc-74d0-454b-9a51-feda4b6b18da",
 } as const;
 
+// All known player_stats keys available in /matches/{matchId}/stats responses.
+// Note: keys marked with "?" may not appear in all matches depending on game mode/season.
+export const MATCH_STAT_KEYS = {
+  // Core
+  RESULT: "Result",
+  KILLS: "Kills",
+  DEATHS: "Deaths",
+  ASSISTS: "Assists",
+  KD_RATIO: "K/D Ratio",
+  KR_RATIO: "K/R Ratio",          // kills per round
+  ADR: "ADR",
+  DAMAGE: "Damage",               // total damage dealt
+  HEADSHOTS: "Headshots",         // raw headshot count
+  HEADSHOTS_PCT: "Headshots %",
+  MVPS: "MVPs",
+  // Multi-kills
+  DOUBLE_KILLS: "Double Kills",
+  TRIPLE_KILLS: "Triple Kills",
+  QUADRO_KILLS: "Quadro Kills",
+  PENTA_KILLS: "Penta Kills",
+  // Opening / entry (? availability may vary)
+  FIRST_KILLS: "First Kills",
+  ENTRY_COUNT: "Entry Count",
+  ENTRY_WINS: "Entry Wins",
+  // Clutch (? availability may vary)
+  CLUTCH_KILLS: "Clutch Kills",
+  ONE_V_ONE_WINS: "1v1Wins",
+  ONE_V_TWO_WINS: "1v2Wins",
+  // Weapons
+  SNIPER_KILLS: "Sniper Kills",
+  // Utility
+  UTILITY_DAMAGE: "Utility Damage",
+  FLASH_SUCCESSES: "Flash Successes",
+} as const;
+
 // Pagination constants
 const FACEIT_MAX_LIMIT = 100;
 const DEFAULT_MAX_MATCHES = parseInt(process.env.FACEIT_MAX_MATCHES || "200", 10);
@@ -63,6 +98,16 @@ interface MatchHistoryItem {
   competition_type: string;
   organizer_id: string;
   finished_at: number;
+  // Optional fields present in live API responses
+  game_id?: string;
+  region?: string;
+  started_at?: number;
+  status?: string;
+  faceit_url?: string;
+  results?: {
+    score: { faction1: number; faction2: number };
+    winner: string;
+  };
 }
 
 interface MatchHistoryResponse {
@@ -76,7 +121,25 @@ interface PlayerMatchStats {
 
 interface MatchStatsResponse {
   rounds: Array<{
+    round_stats?: {
+      Map: string;
+      Score: string;
+      Winner: string;
+      Rounds: string;
+      Region: string;
+    };
     teams: Array<{
+      team_id: string;
+      premade: boolean;
+      team_stats?: {
+        Team: string;
+        TeamWin: string;
+        FinalScore: string;
+        FirstHalfScore: string;
+        SecondHalfScore: string;
+        Overtimescore: string;
+        TeamHeadshots: string;
+      };
       players: PlayerMatchStats[];
     }>;
   }>;
@@ -121,6 +184,35 @@ export interface CompetitionInfo {
   match_count: number;
 }
 
+export interface PlayerMapStats {
+  map: string;
+  matches_played: number;
+  wins: number;
+  win_rate: number;
+  kills: number;
+  deaths: number;
+  assists: number;
+  kd_ratio: number;
+  adr: number;
+  headshot_pct: number;
+}
+
+export interface PlayerMatchResult {
+  match_id: string;
+  map: string;
+  started_at: number;
+  finished_at: number;
+  result: "win" | "loss" | "unknown";
+  score: string;
+  kills: number;
+  deaths: number;
+  assists: number;
+  kd_ratio: number;
+  adr: number;
+  headshot_pct: number;
+  mvps: number;
+}
+
 export interface PlayerSeasonStats {
   player_id: string;
   competition_id: string;
@@ -129,18 +221,39 @@ export interface PlayerSeasonStats {
   wins: number;
   losses: number;
   win_rate: number;
+  // Kills & damage
   kills: number;
   deaths: number;
   assists: number;
   kd_ratio: number;
+  kr_ratio: number;
   adr: number;
+  damage: number;
+  headshots: number;
   headshot_pct: number;
   mvps: number;
+  // Multi-kills
   multi_kills: {
+    doubles: number;
     triples: number;
     quads: number;
     aces: number;
   };
+  // Opening / entry
+  first_kills: number;
+  entry_count: number;
+  entry_wins: number;
+  entry_success_rate: number;
+  // Clutch
+  clutch_kills: number;
+  one_v_one_wins: number;
+  one_v_two_wins: number;
+  // Weapons & utility
+  sniper_kills: number;
+  utility_damage: number;
+  flash_successes: number;
+  // Per-map breakdown
+  maps: Record<string, PlayerMapStats>;
 }
 
 // Internal API calls
@@ -262,24 +375,40 @@ export const getPlayerStatsForCompetition = async (
     (match) => match.competition_id === competitionId
   );
 
+  const emptyStats: PlayerSeasonStats = {
+    player_id: playerId,
+    competition_id: competitionId,
+    competition_name: "",
+    matches_played: 0,
+    wins: 0,
+    losses: 0,
+    win_rate: 0,
+    kills: 0,
+    deaths: 0,
+    assists: 0,
+    kd_ratio: 0,
+    kr_ratio: 0,
+    adr: 0,
+    damage: 0,
+    headshots: 0,
+    headshot_pct: 0,
+    mvps: 0,
+    multi_kills: { doubles: 0, triples: 0, quads: 0, aces: 0 },
+    first_kills: 0,
+    entry_count: 0,
+    entry_wins: 0,
+    entry_success_rate: 0,
+    clutch_kills: 0,
+    one_v_one_wins: 0,
+    one_v_two_wins: 0,
+    sniper_kills: 0,
+    utility_damage: 0,
+    flash_successes: 0,
+    maps: {},
+  };
+
   if (competitionMatches.length === 0) {
-    return {
-      player_id: playerId,
-      competition_id: competitionId,
-      competition_name: "",
-      matches_played: 0,
-      wins: 0,
-      losses: 0,
-      win_rate: 0,
-      kills: 0,
-      deaths: 0,
-      assists: 0,
-      kd_ratio: 0,
-      adr: 0,
-      headshot_pct: 0,
-      mvps: 0,
-      multi_kills: { triples: 0, quads: 0, aces: 0 },
-    };
+    return emptyStats;
   }
 
   const competitionName = competitionMatches[0].competition_name;
@@ -291,11 +420,14 @@ export const getPlayerStatsForCompetition = async (
         const round = stats.rounds[0];
         if (!round) return null;
 
+        const map = round.round_stats?.Map ?? "unknown";
+
         for (const team of round.teams) {
           const player = team.players.find((p) => p.player_id === playerId);
           if (player) {
             return {
-              won: player.player_stats["Result"] === "1",
+              won: player.player_stats[MATCH_STAT_KEYS.RESULT] === "1",
+              map,
               stats: player.player_stats,
             };
           }
@@ -324,6 +456,55 @@ export const getPlayerStatsForCompetition = async (
 
   const wins = validMatches.filter((m) => m.won).length;
   const losses = validMatches.length - wins;
+  const totalKills = sum(MATCH_STAT_KEYS.KILLS);
+  const totalHeadshots = sum(MATCH_STAT_KEYS.HEADSHOTS);
+  const entryCount = sum(MATCH_STAT_KEYS.ENTRY_COUNT);
+  const entryWins = sum(MATCH_STAT_KEYS.ENTRY_WINS);
+
+  // Derive headshot % from raw totals where available; fall back to averaged per-match %
+  const headshotPct =
+    totalKills > 0 && totalHeadshots > 0
+      ? Math.round((totalHeadshots / totalKills) * 100 * 100) / 100
+      : avg(MATCH_STAT_KEYS.HEADSHOTS_PCT);
+
+  // Build per-map breakdown
+  const mapGroups = new Map<string, typeof validMatches>();
+  for (const match of validMatches) {
+    if (!mapGroups.has(match.map)) {
+      mapGroups.set(match.map, []);
+    }
+    mapGroups.get(match.map)!.push(match);
+  }
+
+  const maps: Record<string, PlayerMapStats> = {};
+  for (const [map, mapMatches] of mapGroups) {
+    const mapWins = mapMatches.filter((m) => m.won).length;
+    const mapSum = (key: string): number =>
+      mapMatches.reduce((acc, m) => acc + parseFloat(m.stats[key] || "0"), 0);
+    const mapAvg = (key: string): number => {
+      const values = mapMatches.map((m) => parseFloat(m.stats[key] || "0"));
+      return values.length > 0
+        ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100
+        : 0;
+    };
+    const mapKills = mapSum(MATCH_STAT_KEYS.KILLS);
+    const mapHeadshots = mapSum(MATCH_STAT_KEYS.HEADSHOTS);
+    maps[map] = {
+      map,
+      matches_played: mapMatches.length,
+      wins: mapWins,
+      win_rate: Math.round((mapWins / mapMatches.length) * 100),
+      kills: mapKills,
+      deaths: mapSum(MATCH_STAT_KEYS.DEATHS),
+      assists: mapSum(MATCH_STAT_KEYS.ASSISTS),
+      kd_ratio: mapAvg(MATCH_STAT_KEYS.KD_RATIO),
+      adr: mapAvg(MATCH_STAT_KEYS.ADR),
+      headshot_pct:
+        mapKills > 0 && mapHeadshots > 0
+          ? Math.round((mapHeadshots / mapKills) * 100 * 100) / 100
+          : mapAvg(MATCH_STAT_KEYS.HEADSHOTS_PCT),
+    };
+  }
 
   return {
     player_id: playerId,
@@ -336,17 +517,93 @@ export const getPlayerStatsForCompetition = async (
       validMatches.length > 0
         ? Math.round((wins / validMatches.length) * 100)
         : 0,
-    kills: sum("Kills"),
-    deaths: sum("Deaths"),
-    assists: sum("Assists"),
-    kd_ratio: avg("K/D Ratio"),
-    adr: avg("ADR"),
-    headshot_pct: avg("Headshots %"),
-    mvps: sum("MVPs"),
+    kills: totalKills,
+    deaths: sum(MATCH_STAT_KEYS.DEATHS),
+    assists: sum(MATCH_STAT_KEYS.ASSISTS),
+    kd_ratio: avg(MATCH_STAT_KEYS.KD_RATIO),
+    kr_ratio: avg(MATCH_STAT_KEYS.KR_RATIO),
+    adr: avg(MATCH_STAT_KEYS.ADR),
+    damage: sum(MATCH_STAT_KEYS.DAMAGE),
+    headshots: totalHeadshots,
+    headshot_pct: headshotPct,
+    mvps: sum(MATCH_STAT_KEYS.MVPS),
     multi_kills: {
-      triples: sum("Triple Kills"),
-      quads: sum("Quadro Kills"),
-      aces: sum("Penta Kills"),
+      doubles: sum(MATCH_STAT_KEYS.DOUBLE_KILLS),
+      triples: sum(MATCH_STAT_KEYS.TRIPLE_KILLS),
+      quads: sum(MATCH_STAT_KEYS.QUADRO_KILLS),
+      aces: sum(MATCH_STAT_KEYS.PENTA_KILLS),
     },
+    first_kills: sum(MATCH_STAT_KEYS.FIRST_KILLS),
+    entry_count: entryCount,
+    entry_wins: entryWins,
+    entry_success_rate:
+      entryCount > 0 ? Math.round((entryWins / entryCount) * 100) : 0,
+    clutch_kills: sum(MATCH_STAT_KEYS.CLUTCH_KILLS),
+    one_v_one_wins: sum(MATCH_STAT_KEYS.ONE_V_ONE_WINS),
+    one_v_two_wins: sum(MATCH_STAT_KEYS.ONE_V_TWO_WINS),
+    sniper_kills: sum(MATCH_STAT_KEYS.SNIPER_KILLS),
+    utility_damage: sum(MATCH_STAT_KEYS.UTILITY_DAMAGE),
+    flash_successes: sum(MATCH_STAT_KEYS.FLASH_SUCCESSES),
+    maps,
   };
+};
+
+export const getPlayerMatchesForCompetition = async (
+  playerId: string,
+  competitionId: string,
+  game = "cs2"
+): Promise<PlayerMatchResult[]> => {
+  const history = await getPlayerHistoryPaginated(playerId, game);
+
+  const competitionMatches = history.items.filter(
+    (match) => match.competition_id === competitionId
+  );
+
+  const matchResults = await Promise.all(
+    competitionMatches.map(async (match) => {
+      try {
+        const stats = await getMatchStats(match.match_id);
+        const round = stats.rounds[0];
+        if (!round) return null;
+
+        const map = round.round_stats?.Map ?? "unknown";
+        const score = round.round_stats?.Score ?? "";
+
+        for (const team of round.teams) {
+          const player = team.players.find((p) => p.player_id === playerId);
+          if (player) {
+            const resultValue = player.player_stats[MATCH_STAT_KEYS.RESULT];
+            const kills = parseFloat(player.player_stats[MATCH_STAT_KEYS.KILLS] || "0");
+            const headshots = parseFloat(player.player_stats[MATCH_STAT_KEYS.HEADSHOTS] || "0");
+            const headshotPct =
+              kills > 0 && headshots > 0
+                ? Math.round((headshots / kills) * 100 * 100) / 100
+                : parseFloat(player.player_stats[MATCH_STAT_KEYS.HEADSHOTS_PCT] || "0");
+            return {
+              match_id: match.match_id,
+              map,
+              started_at: match.started_at ?? 0,
+              finished_at: match.finished_at,
+              result: (resultValue === "1" ? "win" : resultValue === "0" ? "loss" : "unknown") as PlayerMatchResult["result"],
+              score,
+              kills,
+              deaths: parseFloat(player.player_stats[MATCH_STAT_KEYS.DEATHS] || "0"),
+              assists: parseFloat(player.player_stats[MATCH_STAT_KEYS.ASSISTS] || "0"),
+              kd_ratio: parseFloat(player.player_stats[MATCH_STAT_KEYS.KD_RATIO] || "0"),
+              adr: parseFloat(player.player_stats[MATCH_STAT_KEYS.ADR] || "0"),
+              headshot_pct: headshotPct,
+              mvps: parseFloat(player.player_stats[MATCH_STAT_KEYS.MVPS] || "0"),
+            };
+          }
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    })
+  );
+
+  return matchResults
+    .filter((m): m is PlayerMatchResult => m !== null)
+    .sort((a, b) => b.finished_at - a.finished_at);
 };
