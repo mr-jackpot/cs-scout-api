@@ -43,4 +43,4 @@ jobs:
             --source . \
             --region europe-west2 \
             --allow-unauthenticated \
-            --set-env-vars "FACEIT_API_KEY=${{ secrets.FACEIT_API_KEY }},NODE_ENV=production,API_KEY=${{ secrets.API_KEY }},ALLOWED_ORIGINS=https://cs-scout.com,https://www.cs-scout.com,*.web.app"
+            --set-env-vars "^|^FACEIT_API_KEY=${{ secrets.FACEIT_API_KEY }}|NODE_ENV=production|API_KEY=${{ secrets.API_KEY }}|ALLOWED_ORIGINS=https://cs-scout.com,https://www.cs-scout.com,*.web.app"
