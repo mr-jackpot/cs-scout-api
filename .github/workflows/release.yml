@@ -42,5 +42,12 @@ jobs:
             --project "${{ secrets.GCP_PROJECT_ID }}" \
             --source . \
             --region europe-west2 \
-            --allow-unauthenticated \
             --set-env-vars "^|^FACEIT_API_KEY=${{ secrets.FACEIT_API_KEY }}|NODE_ENV=production|API_KEY=${{ secrets.API_KEY }}|ALLOWED_ORIGINS=https://cs-scout.com,https://www.cs-scout.com,*.web.app"
+
+      - name: Allow unauthenticated access
+        run: |
+          gcloud run services add-iam-policy-binding cs-scout-api \
+            --project "${{ secrets.GCP_PROJECT_ID }}" \
+            --region europe-west2 \
+            --member="allUsers" \
+            --role="roles/run.invoker"
