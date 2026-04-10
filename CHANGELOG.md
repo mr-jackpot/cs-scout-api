@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.3.0...cs-scout-api-v1.3.1) (2026-04-10)
+
+
+### Bug Fixes
+
+* add CORS wildcard support and configure allowed origins for production ([#20](https://github.com/mr-jackpot/cs-scout-api/issues/20)) ([a8a9bca](https://github.com/mr-jackpot/cs-scout-api/commit/a8a9bca9753373faa2ba1d00a8b3c55929759db1))
+
 ## [1.3.0](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.2.1...cs-scout-api-v1.3.0) (2026-04-10)
 
 
