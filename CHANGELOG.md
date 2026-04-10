@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.4](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.3.3...cs-scout-api-v1.3.4) (2026-04-10)
+
+
+### Bug Fixes
+
+* revert to --allow-unauthenticated flag on deploy instead of separate IAM binding step ([#26](https://github.com/mr-jackpot/cs-scout-api/issues/26)) ([3c55844](https://github.com/mr-jackpot/cs-scout-api/commit/3c558442f7e58794f92bfb5f818d385ae4976626))
+
 ## [1.3.3](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.3.2...cs-scout-api-v1.3.3) (2026-04-10)
 
 
