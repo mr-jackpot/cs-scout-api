@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.2.1...cs-scout-api-v1.3.0) (2026-04-10)
+
+
+### Features
+
+* expand FACEIT stats with per-map breakdown and match history endpoint ([#18](https://github.com/mr-jackpot/cs-scout-api/issues/18)) ([bb00121](https://github.com/mr-jackpot/cs-scout-api/commit/bb00121f7c0d125975931e6fe1046de2b0a9d9fd))
+
 ## [1.2.1](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.2.0...cs-scout-api-v1.2.1) (2026-04-09)
 
 
