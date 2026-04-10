@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.3.2...cs-scout-api-v1.3.3) (2026-04-10)
+
+
+### Bug Fixes
+
+* explicitly grant allUsers invoker role after deploy ([#24](https://github.com/mr-jackpot/cs-scout-api/issues/24)) ([02e2013](https://github.com/mr-jackpot/cs-scout-api/commit/02e2013411df0785248471860784a20eec039dc2))
+
 ## [1.3.2](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.3.1...cs-scout-api-v1.3.2) (2026-04-10)
 
 
