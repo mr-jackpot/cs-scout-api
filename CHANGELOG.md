@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.3.1...cs-scout-api-v1.3.2) (2026-04-10)
+
+
+### Bug Fixes
+
+* use pipe delimiter in gcloud set-env-vars to allow commas in ALLOWED_ORIGINS ([#22](https://github.com/mr-jackpot/cs-scout-api/issues/22)) ([5840da1](https://github.com/mr-jackpot/cs-scout-api/commit/5840da1020b79dd2ed19cbb443378ce2b093366e))
+
 ## [1.3.1](https://github.com/mr-jackpot/cs-scout-api/compare/cs-scout-api-v1.3.0...cs-scout-api-v1.3.1) (2026-04-10)
 
 
