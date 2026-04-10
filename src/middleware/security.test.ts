@@ -8,6 +8,7 @@ import ratelimit from "koa-ratelimit";
 import { router } from "../routes";
 import { errorHandler } from "./errorHandler";
 import { rateLimiter } from "./rateLimit";
+import { isOriginAllowed } from "../utils/cors";
 
 // Mock the faceit service
 vi.mock("../services/faceit", () => ({
@@ -36,7 +37,7 @@ const createTestApp = (options: {
         return requestOrigin || "*";
       }
 
-      if (allowedOrigins.includes(requestOrigin)) {
+      if (isOriginAllowed(requestOrigin, allowedOrigins)) {
         return requestOrigin;
       }
 
@@ -120,6 +121,32 @@ describe("Security Middleware", () => {
       expect(response.headers["access-control-allow-origin"]).toBe(
         "https://any-origin.com"
       );
+    });
+
+    it("should allow wildcard suffix patterns (e.g. *.web.app)", async () => {
+      const previewOrigin =
+        "https://cs2-league-tracker-cb062--pr18-preview.web.app";
+      const response = await request(
+        createTestApp({ allowedOrigins: ["https://cs-scout.com", "*.web.app"] })
+      )
+        .get("/health")
+        .set("Origin", previewOrigin);
+
+      expect(response.status).toBe(200);
+      expect(response.headers["access-control-allow-origin"]).toBe(
+        previewOrigin
+      );
+    });
+
+    it("should NOT allow origins that only partially match a wildcard", async () => {
+      const response = await request(
+        createTestApp({ allowedOrigins: ["*.web.app"] })
+      )
+        .get("/health")
+        .set("Origin", "https://malicious.com");
+
+      expect(response.status).toBe(200);
+      expect(response.headers["access-control-allow-origin"]).toBeUndefined();
     });
   });
 

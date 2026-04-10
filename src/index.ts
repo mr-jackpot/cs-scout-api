@@ -7,6 +7,7 @@ import { router } from "./routes";
 import { errorHandler } from "./middleware/errorHandler";
 import { rateLimiter } from "./middleware/rateLimit";
 import { createApiKeyAuth } from "./middleware/apiKeyAuth";
+import { isOriginAllowed } from "./utils/cors";
 
 config();
 
@@ -39,7 +40,7 @@ const corsOptions = {
       return requestOrigin;
     }
 
-    if (allowedOrigins.includes(requestOrigin)) {
+    if (isOriginAllowed(requestOrigin, allowedOrigins)) {
       return requestOrigin;
     }
 
