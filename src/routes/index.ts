@@ -6,6 +6,7 @@ import { healthCheck } from "../controllers/health";
 import {
   getPlayer,
   getPlayerCompetitionStats,
+  getPlayerCompetitionMatches,
   listPlayerEseaSeasons,
   searchPlayersByName,
 } from "../controllers/players";
@@ -90,4 +91,8 @@ router.get("/players/:playerId/esea", listPlayerEseaSeasons);
 router.get(
   "/players/:playerId/competitions/:competitionId/stats",
   getPlayerCompetitionStats
+);
+router.get(
+  "/players/:playerId/competitions/:competitionId/matches",
+  getPlayerCompetitionMatches
 );

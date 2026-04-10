@@ -12,6 +12,7 @@ vi.mock("../services/faceit", () => ({
   searchPlayers: vi.fn(),
   getPlayerEseaSeasons: vi.fn(),
   getPlayerStatsForCompetition: vi.fn(),
+  getPlayerMatchesForCompetition: vi.fn(),
 }));
 
 import {
@@ -19,12 +20,14 @@ import {
   searchPlayers,
   getPlayerEseaSeasons,
   getPlayerStatsForCompetition,
+  getPlayerMatchesForCompetition,
 } from "../services/faceit";
 
 const mockGetPlayerById = vi.mocked(getPlayerById);
 const mockSearchPlayers = vi.mocked(searchPlayers);
 const mockGetPlayerEseaSeasons = vi.mocked(getPlayerEseaSeasons);
 const mockGetPlayerStatsForCompetition = vi.mocked(getPlayerStatsForCompetition);
+const mockGetPlayerMatchesForCompetition = vi.mocked(getPlayerMatchesForCompetition);
 
 // Create test app
 const createApp = () => {
@@ -181,10 +184,24 @@ describe("API Endpoints", () => {
         deaths: 100,
         assists: 50,
         kd_ratio: 1.5,
+        kr_ratio: 0.75,
         adr: 85.5,
+        damage: 21375,
+        headshots: 72,
         headshot_pct: 48,
         mvps: 15,
-        multi_kills: { triples: 5, quads: 2, aces: 1 },
+        multi_kills: { doubles: 18, triples: 5, quads: 2, aces: 1 },
+        first_kills: 12,
+        entry_count: 15,
+        entry_wins: 10,
+        entry_success_rate: 67,
+        clutch_kills: 22,
+        one_v_one_wins: 6,
+        one_v_two_wins: 2,
+        sniper_kills: 18,
+        utility_damage: 420,
+        flash_successes: 31,
+        maps: {},
       });
 
       const response = await request(createApp()).get(
@@ -196,6 +213,10 @@ describe("API Endpoints", () => {
       expect(response.body.competition_id).toBe("comp-1");
       expect(response.body.matches_played).toBe(10);
       expect(response.body.kd_ratio).toBe(1.5);
+      expect(response.body.kr_ratio).toBe(0.75);
+      expect(response.body.multi_kills.doubles).toBe(18);
+      expect(response.body.entry_success_rate).toBe(67);
+      expect(response.body.maps).toBeDefined();
     });
 
     it("should handle service errors gracefully", async () => {
@@ -205,6 +226,76 @@ describe("API Endpoints", () => {
 
       const response = await request(createApp()).get(
         "/players/player-123/competitions/comp-1/stats"
+      );
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBeDefined();
+    });
+  });
+
+  describe("GET /players/:playerId/competitions/:competitionId/matches", () => {
+    it("should return match history for a competition", async () => {
+      mockGetPlayerMatchesForCompetition.mockResolvedValueOnce([
+        {
+          match_id: "match-1",
+          map: "de_mirage",
+          started_at: 1700000000,
+          finished_at: 1700003600,
+          result: "win",
+          score: "16 / 12",
+          kills: 22,
+          deaths: 14,
+          assists: 7,
+          kd_ratio: 1.57,
+          adr: 91.3,
+          headshot_pct: 54.55,
+          mvps: 3,
+        },
+      ]);
+
+      const response = await request(createApp()).get(
+        "/players/player-123/competitions/comp-1/matches"
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body.player_id).toBe("player-123");
+      expect(response.body.competition_id).toBe("comp-1");
+      expect(response.body.matches).toHaveLength(1);
+      expect(response.body.matches[0].map).toBe("de_mirage");
+      expect(response.body.matches[0].result).toBe("win");
+      expect(mockGetPlayerMatchesForCompetition).toHaveBeenCalledWith(
+        "player-123",
+        "comp-1",
+        "cs2"
+      );
+    });
+
+    it("should return empty matches array when none found", async () => {
+      mockGetPlayerMatchesForCompetition.mockResolvedValueOnce([]);
+
+      const response = await request(createApp()).get(
+        "/players/player-123/competitions/comp-1/matches"
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body.matches).toHaveLength(0);
+    });
+
+    it("should return 400 for invalid player ID", async () => {
+      const response = await request(createApp()).get(
+        "/players/invalid id!/competitions/comp-1/matches"
+      );
+
+      expect(response.status).toBe(400);
+    });
+
+    it("should handle service errors gracefully", async () => {
+      mockGetPlayerMatchesForCompetition.mockRejectedValueOnce(
+        new Error("FACEIT API error (500): Internal error")
+      );
+
+      const response = await request(createApp()).get(
+        "/players/player-123/competitions/comp-1/matches"
       );
 
       expect(response.status).toBe(500);

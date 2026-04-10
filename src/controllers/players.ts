@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import {
   getPlayerById,
   getPlayerStatsForCompetition,
+  getPlayerMatchesForCompetition,
   getPlayerEseaSeasons,
   searchPlayers,
   ORGANIZERS,
@@ -97,4 +98,28 @@ export const getPlayerCompetitionStats = async (
     game
   );
   ctx.body = stats;
+};
+
+export const getPlayerCompetitionMatches = async (
+  ctx: Context
+): Promise<void> => {
+  let playerId: string;
+  let competitionId: string;
+  let game: string;
+
+  try {
+    playerId = validatePlayerId(ctx.params.playerId);
+    competitionId = validateCompetitionId(ctx.params.competitionId);
+    game = validateGame(ctx.query.game);
+  } catch (error) {
+    handleValidationError(ctx, error);
+    return;
+  }
+
+  const matches = await getPlayerMatchesForCompetition(
+    playerId,
+    competitionId,
+    game
+  );
+  ctx.body = { player_id: playerId, competition_id: competitionId, matches };
 };

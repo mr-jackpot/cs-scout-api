@@ -119,6 +119,57 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /players/{playerId}/competitions/{competitionId}/matches:
+    get:
+      summary: Get player match history for a competition
+      description: Returns individual match results for a player within a specific ESEA season/competition, sorted newest first
+      operationId: getPlayerCompetitionMatches
+      tags:
+        - Players
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          description: FACEIT player ID
+          schema:
+            type: string
+            format: uuid
+          example: 6204e106-724d-4814-a605-943767d61366
+        - name: competitionId
+          in: path
+          required: true
+          description: FACEIT competition/season ID
+          schema:
+            type: string
+            format: uuid
+          example: ad2c5d0b-b6ff-4851-b3ac-b328dbb6d6c7
+        - name: game
+          in: query
+          required: false
+          description: Game to filter by
+          schema:
+            type: string
+            default: cs2
+      responses:
+        "200":
+          description: List of individual match results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayerMatchHistoryResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /players/{playerId}/competitions/{competitionId}/stats:
     get:
       summary: Get player stats for a competition
@@ -297,10 +348,15 @@ components:
     MultiKills:
       type: object
       required:
+        - doubles
         - triples
         - quads
         - aces
       properties:
+        doubles:
+          type: integer
+          description: Number of 2K rounds
+          example: 22
         triples:
           type: integer
           description: Number of 3K rounds
@@ -313,6 +369,139 @@ components:
           type: integer
           description: Number of 5K rounds (aces)
           example: 1
+
+    PlayerMapStats:
+      type: object
+      required:
+        - map
+        - matches_played
+        - wins
+        - win_rate
+        - kills
+        - deaths
+        - assists
+        - kd_ratio
+        - adr
+        - headshot_pct
+      properties:
+        map:
+          type: string
+          example: de_mirage
+        matches_played:
+          type: integer
+          example: 4
+        wins:
+          type: integer
+          example: 3
+        win_rate:
+          type: integer
+          description: Win percentage (0-100)
+          example: 75
+        kills:
+          type: integer
+          example: 68
+        deaths:
+          type: integer
+          example: 52
+        assists:
+          type: integer
+          example: 22
+        kd_ratio:
+          type: number
+          format: float
+          example: 1.31
+        adr:
+          type: number
+          format: float
+          example: 84.5
+        headshot_pct:
+          type: number
+          format: float
+          example: 52.94
+
+    PlayerMatchResult:
+      type: object
+      required:
+        - match_id
+        - map
+        - started_at
+        - finished_at
+        - result
+        - score
+        - kills
+        - deaths
+        - assists
+        - kd_ratio
+        - adr
+        - headshot_pct
+        - mvps
+      properties:
+        match_id:
+          type: string
+          example: 1-abcd1234-5678-efgh-ijkl-mnopqrstuvwx
+        map:
+          type: string
+          example: de_mirage
+        started_at:
+          type: integer
+          description: Match start time as Unix timestamp
+          example: 1700000000
+        finished_at:
+          type: integer
+          description: Match finish time as Unix timestamp
+          example: 1700003600
+        result:
+          type: string
+          enum: [win, loss, unknown]
+          example: win
+        score:
+          type: string
+          description: Final score string (e.g. "16 / 12")
+          example: "16 / 12"
+        kills:
+          type: integer
+          example: 22
+        deaths:
+          type: integer
+          example: 14
+        assists:
+          type: integer
+          example: 7
+        kd_ratio:
+          type: number
+          format: float
+          example: 1.57
+        adr:
+          type: number
+          format: float
+          example: 91.3
+        headshot_pct:
+          type: number
+          format: float
+          example: 54.55
+        mvps:
+          type: integer
+          example: 3
+
+    PlayerMatchHistoryResponse:
+      type: object
+      required:
+        - player_id
+        - competition_id
+        - matches
+      properties:
+        player_id:
+          type: string
+          format: uuid
+          example: 6204e106-724d-4814-a605-943767d61366
+        competition_id:
+          type: string
+          format: uuid
+          example: ad2c5d0b-b6ff-4851-b3ac-b328dbb6d6c7
+        matches:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlayerMatchResult"
 
     PlayerSeasonStats:
       type: object
@@ -328,10 +517,24 @@ components:
         - deaths
         - assists
         - kd_ratio
+        - kr_ratio
         - adr
+        - damage
+        - headshots
         - headshot_pct
         - mvps
         - multi_kills
+        - first_kills
+        - entry_count
+        - entry_wins
+        - entry_success_rate
+        - clutch_kills
+        - one_v_one_wins
+        - one_v_two_wins
+        - sniper_kills
+        - utility_damage
+        - flash_successes
+        - maps
       properties:
         player_id:
           type: string
@@ -375,22 +578,80 @@ components:
           format: float
           description: Average K/D ratio
           example: 1.43
+        kr_ratio:
+          type: number
+          format: float
+          description: Average kills per round
+          example: 0.82
         adr:
           type: number
           format: float
           description: Average damage per round
           example: 89.71
+        damage:
+          type: integer
+          description: Total damage dealt across all matches
+          example: 22540
+        headshots:
+          type: integer
+          description: Total raw headshot count
+          example: 96
         headshot_pct:
           type: number
           format: float
-          description: Average headshot percentage
-          example: 50.82
+          description: Headshot percentage derived from totals (headshots / kills)
+          example: 51.06
         mvps:
           type: integer
           description: Total MVP awards
           example: 26
         multi_kills:
           $ref: "#/components/schemas/MultiKills"
+        first_kills:
+          type: integer
+          description: Total round-opening kills
+          example: 18
+        entry_count:
+          type: integer
+          description: Number of entry attempts
+          example: 20
+        entry_wins:
+          type: integer
+          description: Successful entry frags
+          example: 14
+        entry_success_rate:
+          type: integer
+          description: Entry success rate percentage (0-100)
+          example: 70
+        clutch_kills:
+          type: integer
+          description: Total kills in clutch situations
+          example: 31
+        one_v_one_wins:
+          type: integer
+          description: 1v1 clutch wins
+          example: 8
+        one_v_two_wins:
+          type: integer
+          description: 1v2 clutch wins
+          example: 3
+        sniper_kills:
+          type: integer
+          description: Total AWP/sniper kills
+          example: 22
+        utility_damage:
+          type: integer
+          description: Total damage dealt via utility (grenades, molotovs)
+          example: 480
+        flash_successes:
+          type: integer
+          description: Total enemies successfully flashed
+          example: 37
+        maps:
+          type: object
+          description: Per-map statistics breakdown
+          additionalProperties:
+            $ref: "#/components/schemas/PlayerMapStats"
 
 tags:
   - name: System
